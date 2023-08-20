@@ -16,7 +16,9 @@
     align-items: center;
 }
 
-.filter-list {}
+.filter-list {
+    overflow-y: scroll;
+}
 
 div.jp-video {
     margin: 20px auto;
@@ -95,7 +97,8 @@ footer {
     max-width: none;
 }
 
-select[multiple], select[size] {
+select[multiple],
+select[size] {
     max-height: 170px;
 }
 
@@ -157,15 +160,15 @@ select[multiple], select[size] {
         background-color: #46474a;
     }
 
-    .navbar-default .navbar-nav > .active > a,
-    .navbar-default .navbar-nav > .active > a:focus,
-    .navbar-default .navbar-nav > .active > a:hover {
+    .navbar-default .navbar-nav>.active>a,
+    .navbar-default .navbar-nav>.active>a:focus,
+    .navbar-default .navbar-nav>.active>a:hover {
         background-color: #46474a;
         color: white;
     }
 
-    .navbar-default .navbar-nav > li > a:focus,
-    .navbar-default .navbar-nav > li > a:hover {
+    .navbar-default .navbar-nav>li>a:focus,
+    .navbar-default .navbar-nav>li>a:hover {
         color: white;
     }
 
@@ -201,9 +204,9 @@ select[multiple], select[size] {
     .btn-default:active.focus,
     .btn-default:active:focus,
     .btn-default:active:hover,
-    .open > .dropdown-toggle.btn-default.focus,
-    .open > .dropdown-toggle.btn-default:focus,
-    .open > .dropdown-toggle.btn-default:hover {
+    .open>.dropdown-toggle.btn-default.focus,
+    .open>.dropdown-toggle.btn-default:focus,
+    .open>.dropdown-toggle.btn-default:hover {
         background-color: inherit;
         color: white;
     }
@@ -220,7 +223,7 @@ select[multiple], select[size] {
 
     .btn-primary.active,
     .btn-primary:active,
-    .open > .dropdown-toggle.btn-primary,
+    .open>.dropdown-toggle.btn-primary,
     .btn-primary.focus,
     .btn-primary:focus {
         background-color: #2e6643;
@@ -294,19 +297,19 @@ select[multiple], select[size] {
         background-color: #46474a;
     }
 
-    .popover.left > .arrow::after {
+    .popover.left>.arrow::after {
         border-left-color: #46474a;
     }
 
-    .popover.bottom > .arrow::after {
+    .popover.bottom>.arrow::after {
         border-bottom-color: #46474a;
     }
 
-    .popover.top > .arrow::after {
+    .popover.top>.arrow::after {
         border-top-color: #46474a;
     }
 
-    .popover.right > .arrow::after {
+    .popover.right>.arrow::after {
         border-right-color: #46474a;
     }
 }

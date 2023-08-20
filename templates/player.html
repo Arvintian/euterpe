@@ -2,47 +2,33 @@
     <div class="row">
         <div class="col-md-12">
             <div class="input-group">
-                <input
-                    id="search"
-                    type="text"
-                    class="form-control"
-                    autofocus=""
+                <input id="search" type="text" class="form-control" autofocus=""
                     placeholder="Search for track, album or artist" />
                 <span class="input-group-btn">
-                    <button
-                        class="btn btn-primary search-form-button"
-                        type="button">
+                    <button class="btn btn-primary search-form-button" type="button">
                         <span class="glyphicon glyphicon-search"></span>
                     </button>
                 </span>
             </div>
         </div>
     </div>
-    
+
     <div class="row">
-        <div class="col-md-5 col-xs-6">
-            <h3>Artist</h3>
-            <select name="artist"
-                id="artist"
-                class="form-control filter-list"
-                size="10">
-                
-            </select>
-        </div>
-        <div class="col-md-5 col-xs-6">
-            <h3>Album</h3>
-            <select name="album"
-                id="album"
-                class="form-control filter-list"
-                size="10">
-                
-            </select>
-        </div>
         <div class="col-md-2 col-xs-12">
             <h3>Artwork</h3>
             <div class="artwork-bg">
                 <div id="artwork"></div>
             </div>
+        </div>
+        <div class="col-md-5 col-xs-6">
+            <h3>Artist</h3>
+            <select name="artist" id="artist" class="form-control filter-list" size="10">
+            </select>
+        </div>
+        <div class="col-md-5 col-xs-6">
+            <h3>Album</h3>
+            <select name="album" id="album" class="form-control filter-list" size="10">
+            </select>
         </div>
     </div>
 
@@ -54,17 +40,17 @@
                     <div id="jquery_jplayer_bootstrap" class="jp-jplayer"></div>
                 </div>
             </div>
+
             <div class="row">
                 <div class="col-md-12 hidden">
                     <div class="jp-video-play">
-                        <a href="javascript:;"
-                            class="jp-video-play-icon"
-                            tabindex="1">
+                        <a href="javascript:;" class="jp-video-play-icon" tabindex="1">
                             play
                         </a>
                     </div>
                 </div>
             </div>
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="jp-progress">
@@ -74,6 +60,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="row">
                 <div class="col-md-6">
                     <div class="jp-current-time"></div>
@@ -82,6 +69,7 @@
                     <div class="jp-duration"></div>
                 </div>
             </div>
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="jp-title">
@@ -91,9 +79,15 @@
                     </div>
                 </div>
             </div>
-            <div class="row jp-controls">
 
-                <div class="col-md-4 col-sm-3 hidden-xs text-right jp-volume-controls">
+            <div class="row jp-controls" style="46px">
+
+                <div class="col-md-4 text-center jp-current">
+                    <p class="jp-current-p"
+                        style="line-height: 46px; margin-left: 3%; overflow:hidden; white-space:nowrap; width:90%;"></p>
+                </div>
+
+                <div class="col-md-2 hidden-xs text-center jp-volume-controls">
 
                     <button class="btn btn-default btn-xs jp-mute" title="mute">
                         <span class="glyphicon glyphicon-volume-down"></span>
@@ -113,7 +107,7 @@
 
                 </div>
 
-                <div class="col-md-4 col-sm-6 col-xs-12 text-center jp-media-controls">
+                <div class="col-md-4 text-center jp-media-controls">
                     <button class="btn btn-primary jp-previous" title="previous">
                         <span class="glyphicon glyphicon-backward"></span>
                     </button>
@@ -135,7 +129,7 @@
                     </button>
                 </div>
 
-                <div class="col-md-4 col-sm-3 hidden-xs text-left jp-toggles">
+                <div class="col-md-2 text-center jp-toggles">
                     <button class="btn btn-default jp-shuffle" title="shuffle">
                         <span class="glyphicon glyphicon-random"></span>
                     </button>
@@ -195,8 +189,7 @@
                         <span>Update Required</span>
                         To play the media you will need to either update
                         your browser to a recent version or update your
-                        <a href="http://get.adobe.com/flashplayer/"
-                            target="_blank">
+                        <a href="http://get.adobe.com/flashplayer/" target="_blank">
                             Flash plugin
                         </a>.
                     </div>

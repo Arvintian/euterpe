@@ -4,7 +4,7 @@
 
 const serviceName = 'Euterpe';
 
-$(document).ready(function(){
+$(document).ready(function () {
     switch (window.location.pathname) {
         case "/":
             playerPageInit();
@@ -30,7 +30,7 @@ function playerPageInit() {
         if (canPlay == '') {
             $.jPlayer.prototype.format.flac.codec = 'audio/flac';
         }
-    } catch(err) {
+    } catch (err) {
         // Do nothing. This browser probably does not support the HTML <audio> tag.
         // Hope it does support Flash somehow then.
     }
@@ -40,7 +40,7 @@ function playerPageInit() {
     // the played song. Now we make it never select. We also set current = undef so
     // that it will not be equal to the song currently plaing since this is a new
     // playlist after all.
-    jPlayerPlaylist.prototype.setPlaylist = function(playlist) {
+    jPlayerPlaylist.prototype.setPlaylist = function (playlist) {
         this._initPlaylist(playlist);
         this._refresh(true);
     };
@@ -48,14 +48,14 @@ function playerPageInit() {
     // The default implementation of _updateControls was making a show/hide
     // on a class which is present in every entry in the playlist. This takes
     // too much time if the playlist has many items.
-    jPlayerPlaylist.prototype._updateControls = function() {
+    jPlayerPlaylist.prototype._updateControls = function () {
         var shuffled = this.shuffled;
 
         if (this.realShuffled !== undefined) {
             shuffled = this.realShuffled;
         }
 
-        if(shuffled) {
+        if (shuffled) {
             $(this.cssSelector.shuffleOff).show();
             $(this.cssSelector.shuffle).hide();
         } else {
@@ -68,7 +68,7 @@ function playerPageInit() {
 
     // This function was was making repetitive DOM searches.
     // See my pull request for this: https://github.com/happyworm/jPlayer/pull/192
-    jPlayerPlaylist.prototype._refresh = function(instant) {
+    jPlayerPlaylist.prototype._refresh = function (instant) {
         /* instant: Can be undefined, true or a function.
          *  undefined -> use animation timings
          *  true -> no animation
@@ -77,28 +77,28 @@ function playerPageInit() {
         var self = this;
         var playlist_el = $(self.cssSelector.playlist + " ul");
 
-        if(instant && !$.isFunction(instant)) {
+        if (instant && !$.isFunction(instant)) {
             $(playlist_el).empty();
 
-            $.each(this.playlist, function(i) {
+            $.each(this.playlist, function (i) {
                 playlist_el.append(self._createListItem(self.playlist[i]));
             });
             this._updateControls();
         } else {
             var displayTime = playlist_el.children().length ?
-                    this.options.playlistOptions.displayTime : 0;
-            playlist_el.slideUp(displayTime, function() {
+                this.options.playlistOptions.displayTime : 0;
+            playlist_el.slideUp(displayTime, function () {
                 var $this = $(this);
                 $(this).empty();
 
-                $.each(self.playlist, function(i) {
+                $.each(self.playlist, function (i) {
                     $this.append(self._createListItem(self.playlist[i]));
                 });
                 self._updateControls();
-                if($.isFunction(instant)) {
+                if ($.isFunction(instant)) {
                     instant();
                 }
-                if(self.playlist.length) {
+                if (self.playlist.length) {
                     $(this).slideDown(self.options.playlistOptions.displayTime);
                 } else {
                     $(this).show();
@@ -111,7 +111,7 @@ function playerPageInit() {
     *   My own create list item. I am adding track number, album and an album
     *   download button.
     */
-    jPlayerPlaylist.prototype._createListItem = function(media) {
+    jPlayerPlaylist.prototype._createListItem = function (media) {
         var self = this;
         var options = this.options.playlistOptions;
 
@@ -119,21 +119,21 @@ function playerPageInit() {
         var listItem = "<li><div>";
 
         // Create links to free media
-        if(media.free) {
+        if (media.free) {
             var first = true;
             listItem += "<span class='hidden-xs " + options.freeGroupClass;
             listItem += "'>(";
-            $.each(media, function(property,value) {
+            $.each(media, function (property, value) {
                 // Check property is a media format.
-                if($.jPlayer.prototype.format[property]) {
-                    if(first) {
+                if ($.jPlayer.prototype.format[property]) {
+                    if (first) {
                         first = false;
                     } else {
                         listItem += " | ";
                     }
                     listItem += "<a class='" + options.freeItemClass;
                     listItem += "' href='" + value + "' title='download media' >" +
-                                    property + "</a>";
+                        property + "</a>";
                 }
             });
             listItem += ")</span>";
@@ -148,17 +148,18 @@ function playerPageInit() {
 
         if (media.album) {
             listItem += " <span class='hidden-xs " + options.freeGroupClass + "'>" +
-                    "<a href='/v1/album/"+media.album_id+"' title='download album' "+
-                    "target='_blank'>" +  media.album + "</a></span>";
+                "<a href='/v1/album/" + media.album_id + "' title='download album' " +
+                "target='_blank'>" + media.album + "</a></span>";
         }
 
 
         // The title is given next in the HTML otherwise the float:right on the
         // free media corrupts in IE6/7
         listItem += "<a href='javascript:;' class='" + options.itemClass;
-        listItem += "'>" + (media.number ? media.number + '. ' : "") + media.title;
+        //listItem += "'>" + (media.number ? media.number + '. ' : "") + media.title;
+        listItem += "'>" + media.title;
         listItem += (media.artist ?
-                        " <span class='jp-artist'>by "+media.artist+"</span>" : "");
+            " <span class='jp-artist'>- " + media.artist + "</span>" : "");
         listItem += "</a>";
         listItem += "</div></li>";
 
@@ -169,12 +170,12 @@ function playerPageInit() {
     // while media is still runnig. The previous click handler did not change the
     // media when the index of the clicked media matched the index of the currently
     // played media in the previous playlist.
-    jPlayerPlaylist.prototype._createItemHandlers = function() {
+    jPlayerPlaylist.prototype._createItemHandlers = function () {
         var self = this;
         var options = this.options.playlistOptions;
         // Create live handlers for the playlist items
         $(this.cssSelector.playlist).off("click", "a." + options.itemClass);
-        $(this.cssSelector.playlist).on("click", "a." + options.itemClass, function() {
+        $(this.cssSelector.playlist).on("click", "a." + options.itemClass, function () {
             var index = $(this).parent().parent().index();
             self.play(index);
             $(this).blur();
@@ -183,7 +184,7 @@ function playerPageInit() {
 
         // Create live handlers that disable free media links to force access via right click
         $(this.cssSelector.playlist).off("click", "a." + options.freeItemClass);
-        $(this.cssSelector.playlist).on("click", "a." + options.freeItemClass, function() {
+        $(this.cssSelector.playlist).on("click", "a." + options.freeItemClass, function () {
             $(this).parent().parent().find("." + options.itemClass).click();
             $(this).blur();
             return false;
@@ -191,7 +192,7 @@ function playerPageInit() {
 
         // Create live handlers for the remove controls
         $(this.cssSelector.playlist).off("click", "a." + options.removeItemClass);
-        $(this.cssSelector.playlist).on("click", "a." + options.removeItemClass, function() {
+        $(this.cssSelector.playlist).on("click", "a." + options.removeItemClass, function () {
             var index = $(this).parent().parent().index();
             self.remove(index);
             $(this).blur();
@@ -208,8 +209,8 @@ function playerPageInit() {
     // The changed function does not touch the DOM. It just stores a flag that
     // playing must be shuffled. The actual shuffling is done by the "next"
     // function.
-    jPlayerPlaylist.prototype.shuffle = function(shuffled, playNow) {
-        if(shuffled === undefined) {
+    jPlayerPlaylist.prototype.shuffle = function (shuffled, playNow) {
+        if (shuffled === undefined) {
             shuffled = !this.shuffled;
         }
 
@@ -239,7 +240,7 @@ function playerPageInit() {
 
     // next is overwritten in order to support more efficient shuffling. See the comment
     // above shuffled.
-    jPlayerPlaylist.prototype.next = function() {
+    jPlayerPlaylist.prototype.next = function () {
         if (this.shuffled && this.playlist.length > 1) {
             var index = this.current;
             while (index == this.current) {
@@ -254,9 +255,9 @@ function playerPageInit() {
 
         var index = (this.current + 1 < this.playlist.length) ? this.current + 1 : 0;
 
-        if(this.loop) {
+        if (this.loop) {
             this.play(index);
-        } else if(index > 0) {
+        } else if (index > 0) {
             // The index will be zero if it just looped round
             this.play(index);
         }
@@ -264,10 +265,10 @@ function playerPageInit() {
 
     // previous is overwritten in order to support more efficient shuffling. See the
     // comment above shuffled.
-    jPlayerPlaylist.prototype.previous = function() {
+    jPlayerPlaylist.prototype.previous = function () {
         var index = (this.current - 1 >= 0) ? this.current - 1 : this.playlist.length - 1;
 
-        if(this.loop && this.options.playlistOptions.loopOnPrevious || index < this.playlist.length - 1) {
+        if (this.loop && this.options.playlistOptions.loopOnPrevious || index < this.playlist.length - 1) {
             this.play(index);
         }
     }
@@ -311,14 +312,14 @@ function playerPageInit() {
         }
 
         if (search_query == _last_search) {
-           return;
+            return;
         }
 
         if (search_query.length < 1) {
             return;
         }
 
-        _search_timeout = setTimeout(function() {
+        _search_timeout = setTimeout(function () {
             search_database(search_query);
         }, 500);
     };
@@ -326,8 +327,8 @@ function playerPageInit() {
     var search_immediately_on_enter = function (e) {
         var search_query = $('#search').val();
         var code = e.keyCode || e.which;
-        if(code != 13 && e.type != 'click') {
-           return;
+        if (code != 13 && e.type != 'click') {
+            return;
         }
 
         if (_search_timeout) {
@@ -338,14 +339,16 @@ function playerPageInit() {
     };
 
     // Show song title when one is playing
-    $(cssSelector.jPlayer).bind($.jPlayer.event.play, function(event) {
+    $(cssSelector.jPlayer).bind($.jPlayer.event.play, function (event) {
         var media = event.jPlayer.status.media;
 
         if (!media) {
             return;
         }
 
-        document.title = media.title + ' by ' + media.artist + ' | ' + serviceName;
+        document.title = media.title + ' - ' + media.artist;
+
+        $(".jp-current-p").text(media.title + ' - ' + media.artist);
 
         var artwork_el = $('#artwork');
         var artwork_url = '/v1/album/' + escape(media.album_id) + '/artwork';
@@ -370,7 +373,7 @@ function playerPageInit() {
     });
 
     // Restores the normal title when nothing is played
-    var restore_title = function(event) {
+    var restore_title = function (event) {
         document.title = serviceName;
     };
 
@@ -393,35 +396,35 @@ function playerPageInit() {
 
     $('#artist').change(function () {
         save_selected_artist();
-        load_filters(found_songs, {selected_artist: $('#artist').val()});
+        load_filters(found_songs, { selected_artist: $('#artist').val() });
         filter_playlist();
     });
 
-    $('.load-all-btn').click(function(e) {
+    $('.load-all-btn').click(function (e) {
         search_immediately_on_enter(e);
     })
 
-    $('#artwork').popover({
-        container: '#artwork',
-        placement: 'left',
-        trigger: 'hover',
-        viewport: '.container',
-        html: true,
-        content: function() {
-            var bgImage = $('#artwork').css("background-image");
-            if (bgImage == "none") {
-                return;
-            }
+    // $('#artwork').popover({
+    //     container: '#artwork',
+    //     placement: 'left',
+    //     trigger: 'hover',
+    //     viewport: '.container',
+    //     html: true,
+    //     content: function () {
+    //         var bgImage = $('#artwork').css("background-image");
+    //         if (bgImage == "none") {
+    //             return;
+    //         }
 
-            var img = $('<img>');
-            img.attr('src', bgImage.replace(/url\("(.+)"\)/, '$1'));
-            img.attr('style', 'max-width: 50vw; max-height: 50vw;');
-            return img;
-        }
-    });
+    //         var img = $('<img>');
+    //         img.attr('src', bgImage.replace(/url\("(.+)"\)/, '$1'));
+    //         img.attr('style', 'max-width: 50vw; max-height: 50vw;');
+    //         return img;
+    //     }
+    // });
 
     // This event handler stores the state of the "repeat" button.
-    $(cssSelector.jPlayer).bind($.jPlayer.event.repeat, function(event) {
+    $(cssSelector.jPlayer).bind($.jPlayer.event.repeat, function (event) {
         if (!localStorage) {
             return;
         }
@@ -429,7 +432,7 @@ function playerPageInit() {
         localStorage.repeatOn = event.jPlayer.options.loop ? "true" : "false";
     });
 
-    $(document).ajaxStop(function(){
+    $(document).ajaxStop(function () {
         var btn = $('.search-form-button > .glyphicon-refresh');
         btn.removeClass('glyphicon-refresh anim-revolving').addClass('glyphicon-search');
 
@@ -438,7 +441,7 @@ function playerPageInit() {
             addClass('glyphicon-circle-arrow-down');
     });
 
-    $(document).ajaxStart(function(){
+    $(document).ajaxStart(function () {
         var btn = $('.search-form-button > .glyphicon-search');
         btn.removeClass('glyphicon-search').addClass('glyphicon-refresh anim-revolving');
 
@@ -446,6 +449,14 @@ function playerPageInit() {
             removeClass('glyphicon-circle-arrow-down').
             addClass('glyphicon-refresh anim-revolving');
     });
+
+
+    // auto load playlist
+    var search_query = $('#search').val();
+    if (_search_timeout) {
+        clearTimeout(_search_timeout);
+    }
+    search_database(search_query);
 
     restore_last_saved_search();
     restore_shuffle_state(pagePlaylist);
@@ -470,7 +481,7 @@ function addDevicePageInit() {
 
 _ajax_query = null;
 
-function search_database (query, opts) {
+function search_database(query, opts) {
     if (_ajax_query) {
         _ajax_query.abort();
     }
@@ -497,7 +508,7 @@ function search_database (query, opts) {
 
 // Saves this search in the localStorage so that it can be used on the next
 // refresh of the page.
-function save_search_query (query) {
+function save_search_query(query) {
     if (localStorage) {
         localStorage.last_search = query;
     }
@@ -507,18 +518,18 @@ function save_search_query (query) {
 }
 
 // Saves the last selected album in the localStorage
-function save_selected_album () {
+function save_selected_album() {
     var album = $('#album').val();
     if (localStorage) {
         localStorage.last_album = album;
     }
-     if (history.pushState) {
-         history.pushState(null, null, URI(window.location).setSearch('al', album));
-     }
+    if (history.pushState) {
+        history.pushState(null, null, URI(window.location).setSearch('al', album));
+    }
 }
 
 // Saves the last selected artist in the localStorage
-function save_selected_artist () {
+function save_selected_artist() {
     var artist = $('#artist').val();
     if (!localStorage) {
         localStorage.last_artist = artist;
@@ -530,7 +541,7 @@ function save_selected_artist () {
 
 // Restores the last search from the local storage. This should be used on startup.
 // It was uses the laste selected artist and album and then filters the playlist
-function restore_last_saved_search () {
+function restore_last_saved_search() {
     var last_search = null;
 
     var uri = new URI(window.location);
@@ -572,7 +583,7 @@ function restore_shuffle_state(playlistObj) {
     }
 }
 
-function load_playlist (songs) {
+function load_playlist(songs) {
 
     songs.sort(function (a, b) {
         if (a.album == b.album) {
@@ -596,7 +607,7 @@ function load_playlist (songs) {
     var new_playlist = [];
     var songs_length = songs.length;
     for (var i = 0; i < songs_length; i++) {
-        var song_url = "/v1/file/"+songs[i].id;
+        var song_url = "/v1/file/" + songs[i].id;
         var song = {
             title: songs[i].title,
             artist: songs[i].artist,
@@ -669,7 +680,7 @@ function load_filters(songs, opts) {
     }
 
     if (opts.selected_artist === false && localStorage.last_artist &&
-                                            localStorage.last_artist.length >= 1) {
+        localStorage.last_artist.length >= 1) {
         opts.selected_artist = localStorage.last_artist;
     }
 
@@ -678,7 +689,7 @@ function load_filters(songs, opts) {
     }
 
     if (opts.selected_album === false && localStorage.last_album &&
-                                            localStorage.last_album.length >= 1) {
+        localStorage.last_album.length >= 1) {
         opts.selected_album = localStorage.last_album;
     }
 
@@ -763,24 +774,22 @@ function load_filters(songs, opts) {
     }
 
     if (localStorage.last_artist && localStorage.last_artist.length >= 1 &&
-        really_selected_artist.name != localStorage.last_artist)
-    {
+        really_selected_artist.name != localStorage.last_artist) {
         artist_elem.val('');
         delete localStorage.last_artist;
     }
 
     if (localStorage.last_album && localStorage.last_album.length >= 1 &&
-        really_selected_album != localStorage.last_album)
-    {
+        really_selected_album != localStorage.last_album) {
         album_elem.val('');
         delete localStorage.last_album;
     }
 }
 
-function filter_playlist () {
+function filter_playlist() {
 
-    var artist_filter = function (song) {return true;};
-    var album_filter = function (song) {return true;};
+    var artist_filter = function (song) { return true; };
+    var album_filter = function (song) { return true; };
 
     var selected_artist = $('#artist :selected').val();
     if (selected_artist) {
@@ -819,7 +828,7 @@ function filter_playlist () {
     load_playlist(to_load);
 }
 
-function alpha_sort (a, b) {
+function alpha_sort(a, b) {
     if (a.name) {
         return alpha_sort(a.name, b.name);
     }
@@ -843,10 +852,10 @@ function intToDuration(dur) {
     }
 
     const durs = [
-        {n: 60, s: "s"},
-        {n: 60, s: "m"},
-        {n: 24, s: "h"},
-        {n: null, s: "d"},
+        { n: 60, s: "s" },
+        { n: 60, s: "m" },
+        { n: 24, s: "h" },
+        { n: null, s: "d" },
     ];
 
     var str = "";

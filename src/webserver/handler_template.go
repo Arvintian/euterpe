@@ -22,17 +22,17 @@ func NewTemplateHandler(tpl *template.Template, title string) http.Handler {
 			Title:   title,
 			Version: version.Version,
 			Req:     r,
-			Menu: []menu{
-				{
-					Name:   "Player",
-					URI:    "/",
-					Active: r.URL.Path == "/",
-				},
-				{
-					Name:   "Add Device",
-					URI:    "/add_device/",
-					Active: r.URL.Path == "/add_device/",
-				},
+			Menu:    []menu{
+				// {
+				// 	Name:   "Player",
+				// 	URI:    "/",
+				// 	Active: r.URL.Path == "/",
+				// },
+				// {
+				// 	Name:   "Add Device",
+				// 	URI:    "/add_device/",
+				// 	Active: r.URL.Path == "/add_device/",
+				// },
 			},
 		}
 		if err := tpl.Execute(w, data); err != nil {
