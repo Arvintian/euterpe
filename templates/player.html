@@ -5,7 +5,7 @@
                 <input id="search" type="text" class="form-control" autofocus=""
                     placeholder="Search for track, album or artist" />
                 <span class="input-group-btn">
-                    <button class="btn btn-primary search-form-button" type="button">
+                    <button class="btn btn-success search-form-button" type="button">
                         <span class="glyphicon glyphicon-search"></span>
                     </button>
                 </span>
@@ -13,7 +13,7 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row hidden-xs">
         <div class="col-md-2 col-xs-12">
             <h3>Artwork</h3>
             <div class="artwork-bg">
@@ -35,56 +35,12 @@
     <div id="jp_container_bootstrap" class="jp-video">
         <div class="jp-type-playlist">
 
-            <div class="row">
-                <div class="col-md-12 hidden">
-                    <div id="jquery_jplayer_bootstrap" class="jp-jplayer"></div>
-                </div>
-            </div>
+            <div class="row jp-controls" style="padding-top: 20px;">
 
-            <div class="row">
-                <div class="col-md-12 hidden">
-                    <div class="jp-video-play">
-                        <a href="javascript:;" class="jp-video-play-icon" tabindex="1">
-                            play
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="jp-progress">
-                        <div class="jp-seek-bar">
-                            <div class="jp-play-bar"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="jp-current-time"></div>
-                </div>
-                <div class="col-md-6">
-                    <div class="jp-duration"></div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="jp-title">
-                        <ul>
-                            <li></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row jp-controls" style="46px">
-
-                <div class="col-md-4 text-center jp-current">
+                <div class="col-md-5 text-center jp-current">
                     <p class="jp-current-p"
-                        style="line-height: 46px; margin-left: 3%; overflow:hidden; white-space:nowrap; width:90%;"></p>
+                        style="font-size: 15px; line-height: 46px; margin-left: 3%; margin-bottom: 0px; overflow:hidden; white-space:nowrap; width:90%;">
+                    </p>
                 </div>
 
                 <div class="col-md-2 hidden-xs text-center jp-volume-controls">
@@ -107,7 +63,7 @@
 
                 </div>
 
-                <div class="col-md-4 text-center jp-media-controls">
+                <div class="col-md-3 text-center jp-media-controls">
                     <button class="btn btn-primary jp-previous" title="previous">
                         <span class="glyphicon glyphicon-backward"></span>
                     </button>
@@ -149,6 +105,51 @@
             </div>
 
             <div class="row">
+                <div class="col-md-12 hidden">
+                    <div id="jquery_jplayer_bootstrap" class="jp-jplayer"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 hidden">
+                    <div class="jp-video-play">
+                        <a href="javascript:;" class="jp-video-play-icon" tabindex="1">
+                            play
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="jp-current-time"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="jp-duration"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="jp-progress">
+                        <div class="jp-seek-bar">
+                            <div class="jp-play-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="jp-title">
+                        <ul>
+                            <li></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
                 <div class="col-md-12">
                     <div class="empty-playlist playlist-info">
                         <p>
@@ -176,7 +177,7 @@
                         </div>
                     </div>
 
-                    <div class="jp-playlist table-responsive">
+                    <div class="jp-playlist table-responsive" style="padding-top: 12px; border: none;">
                         <ul>
                             <!--
                                 The method Playlist.displayPlaylist() uses this

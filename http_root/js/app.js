@@ -119,25 +119,25 @@ function playerPageInit() {
         var listItem = "<li><div>";
 
         // Create links to free media
-        if (media.free) {
-            var first = true;
-            listItem += "<span class='hidden-xs " + options.freeGroupClass;
-            listItem += "'>(";
-            $.each(media, function (property, value) {
-                // Check property is a media format.
-                if ($.jPlayer.prototype.format[property]) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        listItem += " | ";
-                    }
-                    listItem += "<a class='" + options.freeItemClass;
-                    listItem += "' href='" + value + "' title='download media' >" +
-                        property + "</a>";
-                }
-            });
-            listItem += ")</span>";
-        }
+        // if (media.free) {
+        //     var first = true;
+        //     listItem += "<span class='hidden-xs " + options.freeGroupClass;
+        //     listItem += "'>(";
+        //     $.each(media, function (property, value) {
+        //         // Check property is a media format.
+        //         if ($.jPlayer.prototype.format[property]) {
+        //             if (first) {
+        //                 first = false;
+        //             } else {
+        //                 listItem += " | ";
+        //             }
+        //             listItem += "<a class='" + options.freeItemClass;
+        //             listItem += "' href='" + value + "' title='download media' >" +
+        //                 property + "</a>";
+        //         }
+        //     });
+        //     listItem += ")</span>";
+        // }
 
         var timeString = 'n/a';
         if (media.duration && media.duration > 0) {
@@ -147,9 +147,10 @@ function playerPageInit() {
             options.freeGroupClass + "'>" + timeString + "</span>";
 
         if (media.album) {
-            listItem += " <span class='hidden-xs " + options.freeGroupClass + "'>" +
-                "<a href='/v1/album/" + media.album_id + "' title='download album' " +
-                "target='_blank'>" + media.album + "</a></span>";
+            // listItem += " <span class='hidden-xs " + options.freeGroupClass + "'>" +
+            //     "<a href='/v1/album/" + media.album_id + "' title='download album' " +
+            //     "target='_blank'>" + media.album + "</a></span>";
+            listItem += " <span class='hidden-xs " + options.freeGroupClass + "'>" + media.album + "</span>";
         }
 
 
