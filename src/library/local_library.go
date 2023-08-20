@@ -1013,7 +1013,7 @@ func (lib *LocalLibrary) SetArtFinder(caf art.Finder) {
 	lib.artFinder = caf
 }
 
-// SetScaler bind a particular image scaler to this loca library.
+// SetScaler bind a particular image scaler to this local library.
 func (lib *LocalLibrary) SetScaler(scl scaler.Scaler) {
 	lib.imageScaler = scl
 }

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -341,15 +342,27 @@ func (lib *LocalLibrary) checkAndRemoveArtists(artistIDs []int64) error {
 
 // checkAndRemoveTracks removes all stale tracks from the database. This might be
 //
-//	* Tracks which no longer exist on disk.
-//	* Tracks with unclean file system path. They will be inserted again
-//	  with their clean path by the normal scan.
-//
+//   - Tracks which no longer exist on disk.
+//   - Tracks with unclean file system path. They will be inserted again
+//     with their clean path by the normal scan.
 func (lib *LocalLibrary) checkAndRemoveTracks(tracks []track) error {
 	for _, track := range tracks {
 		cleanedPath := filepath.Clean(track.fsPath)
 		if cleanedPath != track.fsPath {
 			log.Printf("Removing duplicate %d - '%s'\n", track.id, track.fsPath)
+			lib.removeFile(track.fsPath)
+			continue
+		}
+
+		isTracked := false
+		for _, path := range lib.paths {
+			if strings.HasPrefix(track.fsPath, path) {
+				isTracked = true
+				break
+			}
+		}
+		if !isTracked {
+			log.Printf("Removing not track %d - '%s'\n", track.id, track.fsPath)
 			lib.removeFile(track.fsPath)
 			continue
 		}

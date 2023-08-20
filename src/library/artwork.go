@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bogem/id3v2/v2"
 	"github.com/ironsmile/euterpe/src/art"
 )
 
@@ -103,6 +104,11 @@ func (lib *LocalLibrary) findAndSaveAlbumArtworkOrOriginal(
 		return lib.storeAlbumArtwork(albumID, reader, OriginalImage)
 	} else if err != ErrArtworkNotFound {
 		return nil, size, err
+	}
+
+	reader, err = lib.albumArtworkFromID3(ctx, albumID)
+	if err == nil {
+		return lib.storeAlbumArtwork(albumID, reader, OriginalImage)
 	}
 
 	reader, err = lib.albumArtworkFromInternet(ctx, albumID)
@@ -219,6 +225,56 @@ func (lib *LocalLibrary) saveAlbumArtworkNotFound(albumID int64) error {
 	}
 
 	return nil
+}
+
+func (lib *LocalLibrary) albumArtworkFromID3(
+	ctx context.Context,
+	albumID int64,
+) (io.ReadCloser, error) {
+	var fsPath string
+	work := func(db *sql.DB) error {
+		row, err := db.QueryContext(ctx, `
+			SELECT
+				fs_path
+			FROM tracks AS t
+			WHERE album_id = ?
+			LIMIT 1;
+		`, albumID)
+
+		if err != nil {
+			return fmt.Errorf("query database: %s", err)
+		}
+
+		defer func(row *sql.Rows) {
+			row.Close()
+		}(row)
+
+		if row.Next() {
+			if err := row.Scan(&fsPath); err != nil {
+				return fmt.Errorf("scanning db result: %s", err)
+			}
+		}
+
+		return nil
+	}
+	if err := lib.executeDBJobAndWait(work); err != nil {
+		return nil, err
+	}
+
+	fileMeta, err := id3v2.Open(fsPath, id3v2.Options{Parse: true})
+	if err != nil {
+		return nil, err
+	}
+	pictures := fileMeta.GetFrames(fileMeta.CommonID("Attached picture"))
+	for _, f := range pictures {
+		pic, ok := f.(id3v2.PictureFrame)
+		if !ok {
+			continue
+		}
+		return newBytesReadCloser(pic.Picture), nil
+	}
+
+	return nil, ErrArtworkNotFound
 }
 
 func (lib *LocalLibrary) albumArtworkFromInternet(
