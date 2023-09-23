@@ -41,4 +41,5 @@ dist/*
 
 # OSX bullshits
 **/.DS_Store
+.pyc
 
