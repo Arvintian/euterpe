@@ -316,9 +316,9 @@ function playerPageInit() {
             return;
         }
 
-        if (search_query.length < 1) {
-            return;
-        }
+        // if (search_query.length < 1) {
+        //     return;
+        // }
 
         _search_timeout = setTimeout(function () {
             search_database(search_query);

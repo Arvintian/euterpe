@@ -1,3 +1,5 @@
+VERSION=1.5.5
+
 # Build a normal binary for development.
 all:
 	go build \
@@ -28,3 +30,6 @@ dist-archive:
 # Start euterpe after building it from source.
 run:
 	go run --tags "sqlite_icu" main.go -D -local-fs
+
+package:
+	docker build -t arvintian/euterpe:$(VERSION) .
