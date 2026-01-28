@@ -2,13 +2,13 @@ VERSION=1.5.5
 
 # Build a normal binary for development.
 all:
-	go build \
+	GOPROXY=https://goproxy.cn,direct go build \
 		--tags "sqlite_icu" \
 		-ldflags "-X github.com/ironsmile/euterpe/src/version.Version=`git describe --tags --always`"
 
 # Build a release binary which could be used in the distribution archive.
 release:
-	go build \
+	GOPROXY=https://goproxy.cn,direct go build \
 		--tags "sqlite_icu" \
 		-ldflags "-X github.com/ironsmile/euterpe/src/version.Version=`git describe --tags --always`" \
 		-o euterpe
