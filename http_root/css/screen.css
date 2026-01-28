@@ -15,6 +15,35 @@
     overflow-y: scroll;
 }
 
+.jp-playlist {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.container {
+    padding-bottom: 20px;
+}
+
+@media (max-height: 800px) {
+    .jp-playlist {
+        max-height: 300px;
+    }
+}
+
+@media (max-height: 600px) {
+    .jp-playlist {
+        max-height: 250px;
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .jp-playlist {
+        max-height: 300px;
+    }
+}
+
 div.jp-video {
     margin: 20px auto;
 }
