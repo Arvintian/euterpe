@@ -371,7 +371,31 @@ function playerPageInit() {
                 );
             }
         }
+
+        if (navigator.mediaSession) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: media.title,
+                artist: media.artist,
+                album: media.album,
+                artwork: [{ src: '/v1/album/' + escape(media.album_id) + '/artwork', sizes: '512x512', type: 'image/png' }]
+            });
+        }
     });
+
+    if (navigator.mediaSession) {
+        navigator.mediaSession.setActionHandler('previoustrack', function() {
+            pagePlaylist.previous();
+        });
+        navigator.mediaSession.setActionHandler('nexttrack', function() {
+            pagePlaylist.next();
+        });
+        navigator.mediaSession.setActionHandler('play', function() {
+            pagePlaylist.play(pagePlaylist.current);
+        });
+        navigator.mediaSession.setActionHandler('pause', function() {
+            pagePlaylist.pause();
+        });
+    }
 
     // Restores the normal title when nothing is played
     var restore_title = function (event) {
@@ -379,7 +403,17 @@ function playerPageInit() {
     };
 
     $(cssSelector.jPlayer).bind($.jPlayer.event.ended, restore_title);
-    $(cssSelector.jPlayer).bind($.jPlayer.event.pause, restore_title);
+    $(cssSelector.jPlayer).bind($.jPlayer.event.pause, function() {
+        restore_title();
+        if (navigator.mediaSession) {
+            navigator.mediaSession.playbackState = 'paused';
+        }
+    });
+    $(cssSelector.jPlayer).bind($.jPlayer.event.play, function() {
+        if (navigator.mediaSession) {
+            navigator.mediaSession.playbackState = 'playing';
+        }
+    });
 
     // Used when typing in the search area - it should use timeout since more
     // typing can follow immediately
