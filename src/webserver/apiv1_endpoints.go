@@ -13,6 +13,8 @@ const (
 	APIv1EndpointSearch         = "/v1/search/"
 	APIv1EndpointLoginToken     = "/v1/login/token/"
 	APIv1EndpointRegisterToken  = "/v1/register/token/"
+	APIv1EndpointDirs           = "/v1/dirs"
+	APIv1EndpointDirTracks      = "/v1/dir/tracks"
 )
 
 // APIv1Methods defines on which HTTP methods APIv1 endpoints will respond to.
@@ -27,4 +29,6 @@ var APIv1Methods map[string][]string = map[string][]string{
 	APIv1EndpointSearch:         {http.MethodGet},
 	APIv1EndpointLoginToken:     {http.MethodPost},
 	APIv1EndpointRegisterToken:  {http.MethodPost},
+	APIv1EndpointDirs:           {http.MethodGet},
+	APIv1EndpointDirTracks:      {http.MethodGet},
 }

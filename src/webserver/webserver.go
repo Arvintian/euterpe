@@ -93,6 +93,7 @@ func (srv *Server) serveGoroutine() {
 	)
 	artistImageHandler := NewArtistImagesHandler(srv.library)
 	browseHandler := NewBrowseHandler(srv.library)
+	dirHandler := NewDirHandler(srv.library)
 	mediaFileHandler := NewFileHandler(srv.library)
 	loginHandler := NewLoginHandler(srv.cfg.Authenticate)
 	loginTokenHandler := NewLoginTokenHandler(srv.cfg.Authenticate)
@@ -127,6 +128,12 @@ func (srv *Server) serveGoroutine() {
 	)
 	router.Handle(APIv1EndpointSearch, searchHandler).Methods(
 		APIv1Methods[APIv1EndpointSearch]...,
+	)
+	router.Handle(APIv1EndpointDirs, dirHandler).Methods(
+		APIv1Methods[APIv1EndpointDirs]...,
+	)
+	router.Handle(APIv1EndpointDirTracks, dirHandler).Methods(
+		APIv1Methods[APIv1EndpointDirTracks]...,
 	)
 	router.Handle(APIv1EndpointLoginToken, loginTokenHandler).Methods(
 		APIv1Methods[APIv1EndpointLoginToken]...,

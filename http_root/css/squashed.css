@@ -342,3 +342,66 @@ select[size] {
         border-right-color: #46474a;
     }
 }
+/* Directory (folder) view */
+#dir_tree_row {
+    padding-top: 10px;
+}
+
+.dir-tree {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 340px;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.dir-row {
+    padding-top: 4px;
+    padding-bottom: 2px;
+    padding-right: 8px;
+    line-height: 1.6;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.dir-row:hover {
+    background: #f5f5f5;
+}
+
+.dir-row-active {
+    background: #eaf6ea;
+}
+
+.dir-row-active:hover {
+    background: #ddefdd;
+}
+
+.dir-caret {
+    display: inline-block;
+    width: 16px;
+    color: #777;
+}
+
+.dir-name {
+    color: #337ab7;
+}
+
+.dir-count {
+    color: #999;
+    font-size: 12px;
+    margin-left: 6px;
+}
+
+.dir-play {
+    margin-left: 10px;
+    color: #5cb85c;
+}
+
+.dir-play:hover {
+    color: #333;
+}
+
+.dir-empty {
+    padding: 10px;
+    color: #999;
+}

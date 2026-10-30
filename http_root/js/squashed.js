@@ -493,7 +493,37 @@ function playerPageInit() {
             clearTimeout(_search_timeout);
         }
 
+        if (dirMode) {
+            if (dir_search_timeout) {
+                clearTimeout(dir_search_timeout);
+            }
+            dirFilter = search_query;
+            loadDirTree();
+            return;
+        }
+
         search_database(search_query);
+    };
+
+    // In the directory mode the search field searches inside the directory
+    // view. The tree is then rebuilt with only the matching directories.
+    var dir_search_timeout = null;
+    var search_dir_tree_with_timeout = function (query) {
+        if (dir_search_timeout) {
+            clearTimeout(dir_search_timeout);
+        }
+        dir_search_timeout = setTimeout(function () {
+            dirFilter = query;
+            loadDirTree();
+        }, 300);
+    };
+
+    var search_input_handler = function () {
+        if (dirMode) {
+            search_dir_tree_with_timeout($('#search').val());
+            return;
+        }
+        search_with_timeout();
     };
 
     // Show song title when one is playing
@@ -574,8 +604,8 @@ function playerPageInit() {
 
     // Used when typing in the search area - it should use timeout since more
     // typing can follow immediately
-    $('#search').keyup(search_with_timeout);
-    $('#search').change(search_with_timeout);
+    $('#search').keyup(search_input_handler);
+    $('#search').change(search_input_handler);
 
     // Used when Enter is clicked - it should immediately send a request
     $('#search').keypress(search_immediately_on_enter);
@@ -643,14 +673,50 @@ function playerPageInit() {
     });
 
 
+    // Restore the directory view toggle state
+    dirMode = false;
+    if (localStorage && localStorage.dirMode === "true") {
+        dirMode = true;
+    }
+
     // auto load playlist
     var search_query = $('#search').val();
     if (_search_timeout) {
         clearTimeout(_search_timeout);
     }
-    search_database(search_query);
 
-    restore_last_saved_search();
+    // Switch between the flat (search based) view and the directory view
+    $('.dir-toggle-btn').click(function () {
+        dirMode = !dirMode;
+        if (localStorage) {
+            localStorage.dirMode = dirMode ? "true" : "false";
+        }
+
+        applyDirMode();
+
+        if (dirMode) {
+            // Continue with whatever is in the search field as the tree filter
+            dirFilter = $('#search').val();
+            loadDirTree();
+        } else {
+            // Back to the flat view - search the database again
+            dirFilter = "";
+            search_database($('#search').val());
+            restore_last_saved_search();
+        }
+    });
+
+    bindDirTreeEvents();
+    applyDirMode();
+
+    if (dirMode) {
+        $('#search').val(dirFilter);
+        loadDirTree();
+    } else {
+        search_database(search_query);
+        restore_last_saved_search();
+    }
+
     restore_shuffle_state(pagePlaylist);
 }
 
@@ -1018,6 +1084,277 @@ function filter_playlist() {
     }
 
     load_playlist(to_load);
+}
+
+/*
+    Directory (folder) view mode.
+
+    Instead of the flat search based list the user can switch to a
+    collapsible tree of the file system directories which contain media
+    files. Clicking the play icon of a directory loads its whole content
+    (including sub-directories) into the playlist and starts playing it.
+*/
+
+var dirMode = false;      // Whether the directory view is active
+var dirFilter = "";       // The search field value used to filter the tree
+var dirTree = null;       // The built tree (root node object)
+var dirExpanded = {};     // path -> true for expanded directories
+var dirActive = null;     // The path of the currently played directory
+
+// applyDirMode shows or hides the UI parts depending on the current mode
+function applyDirMode() {
+    $('.dir-toggle-btn')
+        .toggleClass('btn-primary', dirMode)
+        .toggleClass('btn-default', !dirMode);
+
+    // The artist and album filters are always shown. In the directory mode
+    // their options are scoped to the currently loaded directory since they
+    // are built from the songs of the shown playlist.
+    $('#dir_tree_row').css('display', dirMode ? '' : 'none');
+}
+
+// loadDirTree fetches the directory list from the server and builds the tree.
+// The current filter (the search field content) is passed to the server so
+// only the directories containing matching files are returned.
+function loadDirTree() {
+    var url = "/v1/dirs?q=" + encodeURIComponent(dirFilter || "");
+
+    $.getJSON(url, function (dirs) {
+        dirTree = buildDirTree(dirs);
+
+        // The selected directory may have no matches after a new search
+        if (!findDirNode(dirTree, dirActive)) {
+            dirActive = null;
+        }
+
+        renderDirTree();
+
+        // Always keep the playlist below in sync with the filter
+        loadDirPlaylist();
+    });
+}
+
+// findDirNode returns the tree node with the given path or null when there
+// is no such directory in the tree.
+function findDirNode(node, path) {
+    if (!node || !path) {
+        return null;
+    }
+
+    if (node.path === path) {
+        return node;
+    }
+
+    for (var k in node.children) {
+        var found = findDirNode(node.children[k], path);
+        if (found) {
+            return found;
+        }
+    }
+
+    return null;
+}
+
+// loadDirPlaylist refreshes the playlist below the tree. When a directory is
+// selected then its content is shown. Otherwise the whole library is shown,
+// filtered by the search field.
+function loadDirPlaylist() {
+    if (dirActive) {
+        loadDirectory(dirActive, false);
+        return;
+    }
+
+    $.getJSON("/v1/search?q=" + encodeURIComponent(dirFilter || ""), function (songs) {
+        found_songs = songs;
+        load_filters(songs);
+        filter_playlist();
+    });
+}
+
+// buildDirTree turns the flat list of directories into a nested tree.
+// The common leading path (e.g. /home/username/Music) is trimmed away.
+function buildDirTree(dirs) {
+    if (!dirs || dirs.length === 0) {
+        return null;
+    }
+
+    var root = { name: "", path: "", own: 0, count: 0, children: {} };
+
+    for (var i = 0; i < dirs.length; i++) {
+        var segs = dirs[i].path.split("/");
+        var node = root;
+        var p = "";
+        for (var j = 0; j < segs.length; j++) {
+            if (segs[j] === "") {
+                continue;
+            }
+            p = p ? p + "/" + segs[j] : "/" + segs[j];
+            if (!node.children[segs[j]]) {
+                node.children[segs[j]] = {
+                    name: segs[j],
+                    path: p,
+                    own: 0,
+                    count: 0,
+                    children: {}
+                };
+            }
+            node = node.children[segs[j]];
+        }
+        node.own += dirs[i].count;
+    }
+
+    // The count of a directory is the sum of its own files and of all of
+    // its sub-directories.
+    var aggregate = function (node) {
+        var sum = node.own;
+        for (var k in node.children) {
+            sum += aggregate(node.children[k]);
+        }
+        node.count = sum;
+        return sum;
+    };
+    aggregate(root);
+
+    // Trim the common prefix while the top node has a single child and no
+    // files of its own.
+    var top = root;
+    while (top.own === 0) {
+        var keys = Object.keys(top.children);
+        if (keys.length !== 1) {
+            break;
+        }
+        top = top.children[keys[0]];
+    }
+
+    return top;
+}
+
+// renderDirTree redraws the tree. When a search filter is active all the
+// directories are shown expanded since they all contain matching files.
+function renderDirTree() {
+    var $tree = $('#dir_tree').empty();
+
+    if (!dirTree) {
+        $tree.append(
+            $('<div class="dir-empty"></div>').text(
+                dirFilter ?
+                    '没有匹配的目录 / No matching directories' :
+                    '没有找到目录 / No directories found'
+            )
+        );
+        return;
+    }
+
+    var searching = !!(dirFilter && dirFilter.length > 0);
+
+    var renderNode = function (node, depth) {
+        var hasChildren = Object.keys(node.children).length > 0;
+        var expanded = searching ? true : !!dirExpanded[node.path];
+
+        var row = $('<div class="dir-row"></div>').attr('data-path', node.path);
+        row.css('padding-left', (10 + depth * 16) + 'px');
+        if (node.path === dirActive) {
+            row.addClass('dir-row-active');
+        }
+
+        var caret = $('<span class="dir-caret"></span>');
+        if (hasChildren) {
+            caret.text(expanded ? '\u25BE ' : '\u25B8 ');
+        } else {
+            caret.html('&nbsp;&nbsp;');
+        }
+        row.append(caret);
+
+        row.append($('<span class="dir-name"></span>').text(node.name));
+        row.append($('<span class="dir-count"></span>').text('(' + node.count + ')'));
+
+        row.append(
+            $('<a class="dir-play" href="javascript:;" ' +
+                'title="播放此目录 / Play this directory">' +
+                '<span class="glyphicon glyphicon-play"></span></a>')
+        );
+
+        $tree.append(row);
+
+        if (hasChildren && expanded) {
+            var keys = Object.keys(node.children).sort(alpha_sort);
+            for (var i = 0; i < keys.length; i++) {
+                renderNode(node.children[keys[i]], depth + 1);
+            }
+        }
+    };
+
+    renderNode(dirTree, 0);
+}
+
+// bindDirTreeEvents attaches the click handlers of the tree rows
+function bindDirTreeEvents() {
+    $('#dir_tree').off('click.dir').on('click.dir', '.dir-row', function (e) {
+        var path = $(this).attr('data-path');
+
+        // The play icon plays the directory right away
+        if ($(e.target).closest('.dir-play').length > 0) {
+            playDirectory(path);
+            return;
+        }
+
+        // A click on the row expands/collapses it and shows its content
+        // in the playlist below without starting the playback.
+        dirExpanded[path] = !dirExpanded[path];
+        renderDirTree();
+        selectDirectory(path);
+    });
+}
+
+// playDirectory loads all the files of the directory (and its
+// sub-directories) into the playlist and starts playing.
+function playDirectory(path) {
+    loadDirectory(path, true);
+}
+
+// selectDirectory loads all the files of the directory (and its
+// sub-directories) into the playlist without playing them.
+function selectDirectory(path) {
+    loadDirectory(path, false);
+}
+
+// loadDirectory fetches the content of a directory into the playlist. When
+// autoplay is true the playback starts immediately.
+function loadDirectory(path, autoplay) {
+    var url = "/v1/dir/tracks?path=" + encodeURIComponent(path) +
+        "&q=" + encodeURIComponent(dirFilter || "");
+
+    $.getJSON(url, function (songs) {
+        dirActive = path;
+
+        // Expand all the ancestors of this directory so it stays visible.
+        // The directory itself is expanded only when it is played.
+        var segs = path.split("/");
+        var p = "";
+        for (var i = 0; i < segs.length - 1; i++) {
+            if (segs[i] === "") {
+                continue;
+            }
+            p = p ? p + "/" + segs[i] : "/" + segs[i];
+            dirExpanded[p] = true;
+        }
+
+        if (autoplay) {
+            dirExpanded[path] = true;
+        }
+
+        found_songs = songs;
+        load_filters(songs);
+        // filter_playlist respects the artist and album selects which are
+        // scoped to the songs of this directory
+        filter_playlist();
+
+        renderDirTree();
+
+        if (autoplay && pagePlaylist.playlist.length > 0) {
+            pagePlaylist.play(0);
+        }
+    });
 }
 
 function alpha_sort(a, b) {

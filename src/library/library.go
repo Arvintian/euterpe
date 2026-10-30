@@ -35,6 +35,16 @@ type SearchResult struct {
 
 	// Duration is the track length in milliseconds.
 	Duration int64 `json:"duration"`
+
+	// Full file system path of the media file.
+	Path string `json:"path,omitempty"`
+}
+
+// Dir represents a directory containing media files with the number of files
+// it directly contains.
+type Dir struct {
+	Path  string `json:"path"`
+	Count int64  `json:"count"`
 }
 
 // Artist represents an artist from the database
@@ -70,6 +80,17 @@ type Library interface {
 
 	// Returns search result will all the files of this album
 	GetAlbumFiles(int64) []SearchResult
+
+	// ListDirs returns all the directories which contain media files, together
+	// with the number of files in each one. When searchTerm is not empty only
+	// the directories containing files matching it are returned and the counts
+	// are for matching files only.
+	ListDirs(searchTerm string) []Dir
+
+	// DirTracks returns all the media files in the given directory and all of
+	// its sub-directories. When searchTerm is not empty only the files whose
+	// title, artist or album match it are returned.
+	DirTracks(dirPath, searchTerm string) []SearchResult
 
 	// Starts a full library scan. Will scan all paths if
 	// they are not scanned already.

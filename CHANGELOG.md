@@ -1,5 +1,15 @@
 # Change Log
 
+## Unreleased
+
+**What is New**
+
+* The web UI has a new "directory" view which lists the media library as a collapsible tree of folders. It is toggled by the folder button next to the search field. Playing a folder loads everything in it (including sub-folders) into the playlist. The choice of view is remembered between visits.
+
+* Two new API v1 endpoints: `GET /v1/dirs` returns all directories with media files together with the number of files in each one. `GET /v1/dir/tracks?path=<directory>` returns all the media files in a directory and its sub-directories.
+
+* Search results now contain the file system `path` of the media file.
+
 ## v1.5.4 - 2023-04-02
 
 Another release mainly focused on bug fixes.

@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 
@@ -200,16 +201,18 @@ func (lib *LocalLibrary) Search(searchTerm string) []SearchResult {
 		defer rows.Close()
 		for rows.Next() {
 			var res SearchResult
+			var fsPath string
 
 			err := rows.Scan(&res.ID, &res.Title, &res.Album, &res.Artist,
-				&res.ArtistID, &res.TrackNumber, &res.AlbumID, &res.Format,
+				&res.ArtistID, &res.TrackNumber, &res.AlbumID, &fsPath,
 				&res.Duration)
 			if err != nil {
 				log.Printf("Error scanning search result: %s\n", err)
 				continue
 			}
 
-			res.Format = mediaFormatFromFileName(res.Format)
+			res.Format = mediaFormatFromFileName(fsPath)
+			res.Path = fsPath
 
 			output = append(output, res)
 		}
@@ -311,6 +314,155 @@ func (lib *LocalLibrary) GetAlbumFiles(albumID int64) []SearchResult {
 	}
 	if err := lib.executeDBJobAndWait(work); err != nil {
 		log.Printf("Error executing get album files db work: %s", err)
+		return output
+	}
+	return output
+}
+
+// ListDirs satisfies the Library interface.
+//
+// The directories are calculated in Go because sqlite has no dirname()
+// function which could be used in an sql query.
+func (lib *LocalLibrary) ListDirs(searchTerm string) []Dir {
+	counts := make(map[string]int64)
+
+	query := `
+		SELECT
+			t.fs_path
+		FROM
+			tracks as t
+				LEFT JOIN albums as al ON al.id = t.album_id
+				LEFT JOIN artists as at ON at.id = t.artist_id
+	`
+	args := []interface{}{}
+
+	if term := strings.TrimSpace(searchTerm); term != "" {
+		like := fmt.Sprintf("%%%s%%", term)
+		query += `
+			WHERE
+				t.name LIKE ? OR
+				al.name LIKE ? OR
+				at.name LIKE ?
+		`
+		args = append(args, like, like, like)
+	}
+
+	work := func(db *sql.DB) error {
+		rows, err := db.Query(query, args...)
+		if err != nil {
+			log.Printf("Query not successful: %s\n", err.Error())
+			return nil
+		}
+
+		defer rows.Close()
+		for rows.Next() {
+			var fsPath string
+			if err := rows.Scan(&fsPath); err != nil {
+				log.Printf("Error scanning file path: %s\n", err)
+				continue
+			}
+			counts[filepath.Dir(fsPath)]++
+		}
+
+		return nil
+	}
+	if err := lib.executeDBJobAndWait(work); err != nil {
+		log.Printf("Error executing list dirs db work: %s", err)
+		return nil
+	}
+
+	output := make([]Dir, 0, len(counts))
+	for dir, count := range counts {
+		output = append(output, Dir{
+			Path:  dir,
+			Count: count,
+		})
+	}
+
+	sort.Slice(output, func(i, j int) bool {
+		return output[i].Path < output[j].Path
+	})
+
+	return output
+}
+
+// DirTracks satisfies the Library interface.
+func (lib *LocalLibrary) DirTracks(dirPath, searchTerm string) []SearchResult {
+	var output []SearchResult
+
+	// Escape LIKE wildcards in the directory path so it is matched literally,
+	// then append the "/*" wildcard to match the directory and sub-directories.
+	cleaned := strings.TrimRight(dirPath, "/")
+	escaped := strings.NewReplacer(
+		"\\", "\\\\",
+		"%", "\\%",
+		"_", "\\_",
+	).Replace(cleaned)
+	match := fmt.Sprintf("%s/%%", escaped)
+
+	query := `
+		SELECT
+			t.id as track_id,
+			t.name as track,
+			al.name as album,
+			at.name as artist,
+			at.id as artist_id,
+			t.number as track_number,
+			t.album_id as album_id,
+			t.fs_path as fs_path,
+			t.duration as duration
+		FROM
+			tracks as t
+				LEFT JOIN albums as al ON al.id = t.album_id
+				LEFT JOIN artists as at ON at.id = t.artist_id
+		WHERE
+			t.fs_path LIKE ? ESCAPE '\'
+	`
+	args := []interface{}{match}
+
+	if term := strings.TrimSpace(searchTerm); term != "" {
+		like := fmt.Sprintf("%%%s%%", term)
+		query += `
+			AND (t.name LIKE ? OR al.name LIKE ? OR at.name LIKE ?)
+		`
+		args = append(args, like, like, like)
+	}
+
+	query += `
+		ORDER BY
+			al.name, t.number
+	`
+
+	work := func(db *sql.DB) error {
+		rows, err := db.Query(query, args...)
+		if err != nil {
+			log.Printf("Query not successful: %s\n", err.Error())
+			return nil
+		}
+
+		defer rows.Close()
+		for rows.Next() {
+			var res SearchResult
+			var fsPath string
+
+			err := rows.Scan(&res.ID, &res.Title, &res.Album, &res.Artist,
+				&res.ArtistID, &res.TrackNumber, &res.AlbumID, &fsPath,
+				&res.Duration)
+			if err != nil {
+				log.Printf("Error scanning search result: %s\n", err)
+				continue
+			}
+
+			res.Format = mediaFormatFromFileName(fsPath)
+			res.Path = fsPath
+
+			output = append(output, res)
+		}
+
+		return nil
+	}
+	if err := lib.executeDBJobAndWait(work); err != nil {
+		log.Printf("Error executing dir tracks db work: %s", err)
 		return output
 	}
 	return output
