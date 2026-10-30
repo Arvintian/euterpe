@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/howeyc/fsnotify"
 	taglib "github.com/wtolson/go-taglib"
@@ -169,6 +170,11 @@ func (lib *LocalLibrary) AddLibraryPath(path string) {
 func (lib *LocalLibrary) Search(searchTerm string) []SearchResult {
 	searchTerm = fmt.Sprintf("%%%s%%", searchTerm)
 
+	// Artwork which has not been found during the last notFoundCacheTTL is
+	// reported as missing so clients do not request it again. Older negative
+	// results are ignored and the artwork will be searched again on request.
+	notFoundBefore := time.Now().Add(-notFoundCacheTTL).Unix()
+
 	var output []SearchResult
 	work := func(db *sql.DB) error {
 		rows, err := db.Query(`
@@ -181,18 +187,23 @@ func (lib *LocalLibrary) Search(searchTerm string) []SearchResult {
 				t.number as track_number,
 				t.album_id as album_id,
 				t.fs_path as fs_path,
-				t.duration as duration
+				t.duration as duration,
+				CASE
+					WHEN aa.artwork_cover IS NOT NULL THEN 1
+					WHEN aa.album_id IS NOT NULL AND aa.updated_at > ? THEN 0
+				END as has_artwork
 			FROM
 				tracks as t
 					LEFT JOIN albums as al ON al.id = t.album_id
 					LEFT JOIN artists as at ON at.id = t.artist_id
+					LEFT JOIN albums_artworks as aa ON aa.album_id = t.album_id
 			WHERE
 				t.name LIKE ? OR
 				al.name LIKE ? OR
 				at.name LIKE ?
 			ORDER BY
 				al.name, t.number
-		`, searchTerm, searchTerm, searchTerm)
+		`, notFoundBefore, searchTerm, searchTerm, searchTerm)
 		if err != nil {
 			log.Printf("Query not successful: %s\n", err.Error())
 			return nil
@@ -202,13 +213,20 @@ func (lib *LocalLibrary) Search(searchTerm string) []SearchResult {
 		for rows.Next() {
 			var res SearchResult
 			var fsPath string
+			var hasArtwork sql.NullBool
 
 			err := rows.Scan(&res.ID, &res.Title, &res.Album, &res.Artist,
 				&res.ArtistID, &res.TrackNumber, &res.AlbumID, &fsPath,
-				&res.Duration)
+				&res.Duration,
+				&hasArtwork)
 			if err != nil {
 				log.Printf("Error scanning search result: %s\n", err)
 				continue
+			}
+
+			if hasArtwork.Valid {
+				artwork := hasArtwork.Bool
+				res.Artwork = &artwork
 			}
 
 			res.Format = mediaFormatFromFileName(fsPath)
@@ -410,15 +428,23 @@ func (lib *LocalLibrary) DirTracks(dirPath, searchTerm string) []SearchResult {
 			t.number as track_number,
 			t.album_id as album_id,
 			t.fs_path as fs_path,
-			t.duration as duration
+			t.duration as duration,
+			CASE
+				WHEN aa.artwork_cover IS NOT NULL THEN 1
+				WHEN aa.album_id IS NOT NULL AND aa.updated_at > ? THEN 0
+			END as has_artwork
 		FROM
 			tracks as t
 				LEFT JOIN albums as al ON al.id = t.album_id
 				LEFT JOIN artists as at ON at.id = t.artist_id
+				LEFT JOIN albums_artworks as aa ON aa.album_id = t.album_id
 		WHERE
 			t.fs_path LIKE ? ESCAPE '\'
 	`
-	args := []interface{}{match}
+	notFoundBefore := time.Now().Add(-notFoundCacheTTL).Unix()
+
+	// The first placeholder is for the artwork CASE in the SELECT.
+	args := []interface{}{notFoundBefore, match}
 
 	if term := strings.TrimSpace(searchTerm); term != "" {
 		like := fmt.Sprintf("%%%s%%", term)
@@ -444,13 +470,20 @@ func (lib *LocalLibrary) DirTracks(dirPath, searchTerm string) []SearchResult {
 		for rows.Next() {
 			var res SearchResult
 			var fsPath string
+			var hasArtwork sql.NullBool
 
 			err := rows.Scan(&res.ID, &res.Title, &res.Album, &res.Artist,
 				&res.ArtistID, &res.TrackNumber, &res.AlbumID, &fsPath,
-				&res.Duration)
+				&res.Duration,
+				&hasArtwork)
 			if err != nil {
 				log.Printf("Error scanning search result: %s\n", err)
 				continue
+			}
+
+			if hasArtwork.Valid {
+				artwork := hasArtwork.Bool
+				res.Artwork = &artwork
 			}
 
 			res.Format = mediaFormatFromFileName(fsPath)

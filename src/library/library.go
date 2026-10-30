@@ -36,6 +36,14 @@ type SearchResult struct {
 	// Duration is the track length in milliseconds.
 	Duration int64 `json:"duration"`
 
+	// Artwork tells whether the album of this track has artwork available.
+	//
+	// It is nil when this is not known yet, i.e. the artwork of the album was
+	// never requested. When it is false the artwork was searched and was not
+	// found recently, so clients should not request it because it would result
+	// in a 404. After a while the library will try to find the artwork again.
+	Artwork *bool `json:"artwork"`
+
 	// Full file system path of the media file.
 	Path string `json:"path,omitempty"`
 }

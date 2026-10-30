@@ -287,7 +287,8 @@ wich would return an JSON array with tracks. Every object in the JSON represents
       "id" : 18,
       "album_id" : 2,
       "format": "mp3",
-      "duration": 180000
+      "duration": 180000,
+      "artwork": true
    },
    {
       "album" : "Battlefield Vietnam",
@@ -298,7 +299,8 @@ wich would return an JSON array with tracks. Every object in the JSON represents
       "album_id" : 2,
       "id" : 22,
       "artist_id": 33,
-      "duration": 308000
+      "duration": 308000,
+      "artwork": true
    }
 ]
 ```
@@ -306,6 +308,12 @@ wich would return an JSON array with tracks. Every object in the JSON represents
 The most important thing here is the track ID at the `id` key. It can be used for playing this track. The other interesting thing is `album_id`. Tracks can be grouped in albums using this value. And the last field of particular interest is `track`. It is the position of this track in the album.
 
 Note that the track duration is in milliseconds.
+
+The `artwork` field tells whether the album of this track has artwork available:
+
+* `true` - the album has artwork and it can be requested at `/v1/album/{albumID}/artwork`;
+* `false` - the artwork was searched for and was not found recently, so requesting it would result in a 404. Clients should not request it;
+* `null` - it is not known whether the album has artwork (it was never requested). Clients may request it and the library will try to find it. The result is remembered and after a while (a week) a new attempt will be made.
 
 ### Browse
 

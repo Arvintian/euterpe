@@ -381,12 +381,19 @@ function playerPageInit() {
 
         $(".jp-current-p").text(media.title + ' - ' + media.artist);
 
+        // Only request the artwork when the album really has one. Otherwise
+        // the interface would produce a 404 request for every track without
+        // cover art.
         var artwork_el = $('#artwork');
-        var artwork_url = '/v1/album/' + escape(media.album_id) + '/artwork';
-        var current_artwork_url = artwork_el.css("background-image");
+        if (media.artwork) {
+            var artwork_url = '/v1/album/' + escape(media.album_id) + '/artwork';
+            var current_artwork_url = artwork_el.css("background-image");
 
-        if (artwork_url !== current_artwork_url) {
-            artwork_el.css("background-image", 'url(' + artwork_url + ')');
+            if (artwork_url !== current_artwork_url) {
+                artwork_el.css("background-image", 'url(' + artwork_url + ')');
+            }
+        } else if (artwork_el.css("background-image") !== "none") {
+            artwork_el.css("background-image", "none");
         }
 
         if (history.pushState) {
@@ -403,12 +410,21 @@ function playerPageInit() {
         }
 
         if (navigator.mediaSession) {
-            navigator.mediaSession.metadata = new MediaMetadata({
+            var meta = {
                 title: media.title,
                 artist: media.artist,
-                album: media.album,
-                artwork: [{ src: '/v1/album/' + escape(media.album_id) + '/artwork', sizes: '512x512', type: 'image/png' }]
-            });
+                album: media.album
+            };
+
+            if (media.artwork) {
+                meta.artwork = [{
+                    src: '/v1/album/' + escape(media.album_id) + '/artwork',
+                    sizes: '512x512',
+                    type: 'image/png'
+                }];
+            }
+
+            navigator.mediaSession.metadata = new MediaMetadata(meta);
         }
     });
 
@@ -561,6 +577,10 @@ function playerPageInit() {
     }
 
     restore_shuffle_state(pagePlaylist);
+
+    // Start tracking and saving the player state so it can be restored
+    // after a page refresh.
+    playerStateStart(pagePlaylist);
 }
 
 function loginPageInit() {
@@ -717,6 +737,10 @@ function load_playlist(songs) {
             number: songs[i].track,
             album_id: songs[i].album_id,
             media_id: songs[i].id,
+            // The backend reports artwork as null when it is not known yet
+            // (never requested) and false when the album really has none.
+            // Unknown ones are requested once, the answer is then remembered.
+            artwork: songs[i].artwork !== false,
             // convert nanoseconds to seconds
             duration: songs[i].duration ? songs[i].duration / 1e3 : 0
         };
@@ -755,11 +779,17 @@ function load_playlist(songs) {
         pagePlaylist._highlight(selected_index);
         pagePlaylist.current = selected_index;
 
-        if (currently_playing === null) {
-            $(pagePlaylist.cssSelector.jPlayer).jPlayer(
-                "setMedia",
-                pagePlaylist.playlist[selected_index]
-            );
+        // Try to restore the saved playback state (track and position).
+        // The playback stays paused - the user only has to press play.
+        // When there is no saved state, fall back to selecting the first
+        // track.
+        if (!playerStateRestore(pagePlaylist)) {
+            if (currently_playing === null) {
+                $(pagePlaylist.cssSelector.jPlayer).jPlayer(
+                    "setMedia",
+                    pagePlaylist.playlist[selected_index]
+                );
+            }
         }
     }
 }

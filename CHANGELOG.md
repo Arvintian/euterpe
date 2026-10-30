@@ -10,6 +10,10 @@
 
 * Search results now contain the file system `path` of the media file.
 
+* Search results now contain an `artwork` field telling whether the album of the track has artwork: `true` when it has one, `false` when it was searched for and not found recently, `null` when it is not known yet. The web UI uses it to avoid requesting artwork for albums without any, which previously resulted in lots of 404 responses. Albums whose artwork state is unknown are still requested once, so existing libraries keep discovering artwork as before.
+
+* The web UI remembers the played track and its position. After a page refresh the state is restored and only the "play" button has to be pressed to continue where playback stopped.
+
 ## v1.5.4 - 2023-04-02
 
 Another release mainly focused on bug fixes.
