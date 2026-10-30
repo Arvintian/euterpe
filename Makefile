@@ -1,4 +1,4 @@
-VERSION=1.5.5
+VERSION=1.6.0
 
 # Build a normal binary for development.
 all:
